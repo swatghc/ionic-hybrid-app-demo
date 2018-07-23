@@ -5,70 +5,96 @@
 // the 2nd parameter is an array of 'requires'
 angular.module('songhop', ['ionic', 'songhop.controllers'])
 
-.run(function($ionicPlatform) {
-  $ionicPlatform.ready(function() {
-    // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
-    // for form inputs)
-    if(window.cordova && window.cordova.plugins.Keyboard) {
-      cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
-    }
-    if(window.StatusBar) {
-      StatusBar.styleDefault();
-    }
-    
-
-  });
-})
-
-
-.config(function($stateProvider, $urlRouterProvider) {
-
-  // Ionic uses AngularUI Router, which uses the concept of states.
-  // Learn more here: https://github.com/angular-ui/ui-router.
-  // Set up the various states in which the app can be.
-  // Each state's controller can be found in controllers.js.
-  $stateProvider
-
-
-  // Set up an abstract state for the tabs directive:
-  .state('tab', {
-    url: '/tab',
-    abstract: true,
-    templateUrl: 'templates/tabs.html',
-    controller: 'TabsCtrl'
-  })
-
-  // Each tab has its own nav history stack:
-
-  .state('tab.discover', {
-    url: '/discover',
-    views: {
-      'tab-discover': {
-        templateUrl: 'templates/discover.html',
-        controller: 'DiscoverCtrl'
+  .run(function ($ionicPlatform) {
+    $ionicPlatform.ready(function () {
+      // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
+      // for form inputs)
+      if (window.cordova && window.cordova.plugins.Keyboard) {
+        cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
       }
-    }
+      if (window.StatusBar) {
+        StatusBar.styleDefault();
+      }
+
+
+    });
   })
 
-  .state('tab.favorites', {
-      url: '/favorites',
-      views: {
-        'tab-favorites': {
-          templateUrl: 'templates/favorites.html',
-          controller: 'FavoritesCtrl'
+
+  .config(function ($stateProvider, $urlRouterProvider) {
+
+    // Ionic uses AngularUI Router, which uses the concept of states.
+    // Learn more here: https://github.com/angular-ui/ui-router.
+    // Set up the various states in which the app can be.
+    // Each state's controller can be found in controllers.js.
+    $stateProvider
+
+
+      // Set up an abstract state for the tabs directive:
+      .state('tab', {
+        url: '/tab',
+        abstract: true,
+        templateUrl: 'templates/tabs.html',
+        controller: 'TabsCtrl',
+        // don't load the state until we've populated our User, if necessary.
+        resolve: {
+          populateSession: function (User) {
+            return User.checkSession();
+          }
+        },
+        onEnter: function ($state, User) {
+          User.checkSession().then(function (hasSession) {
+            if (!hasSession) $state.go('splash');
+          });
         }
-      }
-    })
-  // If none of the above states are matched, use this as the fallback:
-  $urlRouterProvider.otherwise('/tab/discover');
 
-})
+      })
+
+      // Each tab has its own nav history stack:
+
+      .state('tab.discover', {
+        url: '/discover',
+        views: {
+          'tab-discover': {
+            templateUrl: 'templates/discover.html',
+            controller: 'DiscoverCtrl'
+          }
+        }
+      })
+
+      // splash page
+      .state('splash', {
+        url: '/',
+        templateUrl: 'templates/splash.html',
+        controller: 'SplashCtrl',
+        onEnter: function ($state, User) {
+          User.checkSession().then(function (hasSession) {
+            if (hasSession) $state.go('tab.discover');
+          });
+        }
+      })
+
+      .state('tab.favorites', {
+        url: '/favorites',
+        views: {
+          'tab-favorites': {
+            templateUrl: 'templates/favorites.html',
+            controller: 'FavoritesCtrl'
+          }
+        }
+      })
+    // If none of the above states are matched, use this as the fallback:
+    $urlRouterProvider.otherwise('/');
+
+  })
 
 
-.constant('SERVER', {
-  // Local server
-  //url: 'http://localhost:3000'
 
-  // Public Heroku server
-  url: 'https://ionic-songhop.herokuapp.com'
-});
+
+  .constant('SERVER', {
+    // Local server
+    //url: 'http://localhost:3000'
+
+    // Public Heroku server
+    url: 'https://ionic-songhop.herokuapp.com'
+  });
